@@ -148,6 +148,46 @@ body {
   gap: 10px;
 }
 
+.atualizacao-wrap {
+  position: relative;
+}
+
+.atualizacao-painel {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 320px;
+  background: var(--surface-1);
+  border: 1px solid var(--gridline);
+  border-radius: var(--radius);
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.25);
+  z-index: 20;
+  text-align: left;
+}
+.atualizacao-painel__topo {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+.atualizacao-painel__versoes {
+  font-size: 0.85rem;
+  margin: 0 0 8px;
+}
+.atualizacao-painel__notas {
+  font-family: inherit;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  background: var(--page-plane);
+  border-radius: 8px;
+  padding: 8px 10px;
+  max-height: 140px;
+  overflow-y: auto;
+  white-space: pre-wrap;
+  margin: 0 0 10px;
+}
+
 .field {
   display: flex;
   flex-direction: column;

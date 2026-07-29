@@ -15,6 +15,24 @@
 
     <nav class="topbar__nav">
       <button id="themeToggleBtn" class="btn btn--ghost btn--icon" type="button" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">🌙</button>
+      <div class="atualizacao-wrap">
+        <button id="atualizacaoBtn" class="btn btn--ghost" type="button" hidden>Atualizações</button>
+        <div id="atualizacaoPainel" class="atualizacao-painel" hidden>
+          <div class="atualizacao-painel__topo">
+            <strong>Atualizações</strong>
+            <button id="atualizacaoFecharBtn" class="btn btn--ghost btn--icon" type="button" aria-label="Fechar">✕</button>
+          </div>
+          <p id="atualizacaoStatus" class="status-line">Verificando…</p>
+          <div id="atualizacaoDetalhes" hidden>
+            <p class="atualizacao-painel__versoes">
+              Instalada: <strong id="atualizacaoVersaoAtual"></strong>
+              → Disponível: <strong id="atualizacaoVersaoDisponivel"></strong>
+            </p>
+            <pre id="atualizacaoNotas" class="atualizacao-painel__notas"></pre>
+            <button id="atualizacaoAplicarBtn" class="btn">Atualizar agora</button>
+          </div>
+        </div>
+      </div>
       <a href="#/" class="btn btn--ghost" id="navMeusPaineis" hidden>Meus painéis</a>
       <a href="#/editor/novo" class="btn" id="navNovoPainel" hidden>+ Novo painel</a>
       <button id="logoutBtn" class="btn btn--ghost" type="button" hidden>Sair</button>

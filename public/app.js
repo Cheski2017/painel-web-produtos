@@ -350,6 +350,8 @@
     document.getElementById("logoutBtn").hidden = !state.autenticado;
     document.getElementById("navMeusPaineis").hidden = !state.autenticado;
     document.getElementById("navNovoPainel").hidden = !state.autenticado;
+    document.getElementById("atualizacaoBtn").hidden = !state.autenticado;
+    if (!state.autenticado) document.getElementById("atualizacaoPainel").hidden = true;
     return state.autenticado;
   }
 
@@ -497,6 +499,88 @@
       statusEl.className = "status-line status-line--erro";
     }
   });
+
+  // ==================== ATUALIZAÇÃO (via GitHub) ====================
+
+  document.getElementById("atualizacaoBtn").addEventListener("click", async () => {
+    const painel = document.getElementById("atualizacaoPainel");
+    const abrindo = painel.hidden;
+    painel.hidden = !painel.hidden;
+    if (abrindo) await verificarAtualizacaoDisponivel();
+  });
+
+  document.getElementById("atualizacaoFecharBtn").addEventListener("click", () => {
+    document.getElementById("atualizacaoPainel").hidden = true;
+  });
+
+  async function verificarAtualizacaoDisponivel() {
+    const statusEl = document.getElementById("atualizacaoStatus");
+    const detalhesEl = document.getElementById("atualizacaoDetalhes");
+    detalhesEl.hidden = true;
+    statusEl.className = "status-line";
+    statusEl.textContent = "Verificando…";
+
+    try {
+      const info = await fetchJson("/api/atualizacao");
+      if (!info.temAtualizacao) {
+        statusEl.textContent = `Você já está na versão mais recente (v${info.versaoAtual}).`;
+        statusEl.className = "status-line status-line--ok";
+        return;
+      }
+      statusEl.textContent = "Nova versão disponível!";
+      document.getElementById("atualizacaoVersaoAtual").textContent = "v" + info.versaoAtual;
+      document.getElementById("atualizacaoVersaoDisponivel").textContent = "v" + info.versaoDisponivel;
+      document.getElementById("atualizacaoNotas").textContent = info.notas || "(sem notas de versão)";
+      detalhesEl.hidden = false;
+    } catch (err) {
+      statusEl.textContent = "Erro ao verificar atualização: " + err.message;
+      statusEl.className = "status-line status-line--erro";
+    }
+  }
+
+  document.getElementById("atualizacaoAplicarBtn").addEventListener("click", async () => {
+    const statusEl = document.getElementById("atualizacaoStatus");
+    const btn = document.getElementById("atualizacaoAplicarBtn");
+    btn.disabled = true;
+    statusEl.className = "status-line";
+    statusEl.textContent = "Baixando e aplicando a atualização…";
+
+    try {
+      await fetchJson("/api/atualizacao/aplicar", { method: "POST" });
+      statusEl.textContent = "Atualização aplicada! Reiniciando o servidor…";
+      statusEl.className = "status-line status-line--ok";
+      document.getElementById("atualizacaoDetalhes").hidden = true;
+      aguardarServidorVoltar();
+    } catch (err) {
+      statusEl.textContent = "Erro ao atualizar: " + err.message;
+      statusEl.className = "status-line status-line--erro";
+      btn.disabled = false;
+    }
+  });
+
+  function aguardarServidorVoltar() {
+    const statusEl = document.getElementById("atualizacaoStatus");
+    let tentativas = 0;
+    const intervalo = setInterval(async () => {
+      tentativas++;
+      try {
+        const res = await fetch("/api/sessao");
+        if (res.ok) {
+          clearInterval(intervalo);
+          statusEl.textContent = "Pronto! Recarregando…";
+          setTimeout(() => location.reload(), 800);
+          return;
+        }
+      } catch {
+        /* servidor ainda reiniciando, tenta de novo */
+      }
+      if (tentativas >= 30) {
+        clearInterval(intervalo);
+        statusEl.textContent = "O servidor está demorando para voltar. Recarregue a página manualmente.";
+        statusEl.className = "status-line status-line--erro";
+      }
+    }, 2000);
+  }
 
   // ==================== LISTA DE PAINÉIS ====================
 

@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 const zlib = require("zlib");
 const crypto = require("crypto");
+const { spawn } = require("child_process");
 const { URL } = require("url");
 
 const { loadEnv } = require("./env");
@@ -13,6 +14,7 @@ loadEnv();
 const rp = require("./rpClient");
 const paineisStore = require("./paineisStore");
 const configStore = require("./configStore");
+const updater = require("./updater");
 
 const PORT = Number(process.env.PORT) || 3000;
 const PUBLIC_DIR = path.join(__dirname, "..", "public");
@@ -252,6 +254,56 @@ async function handleTestarConexao(req, res) {
     sendJson(res, 200, { ok: true });
   } catch (err) {
     sendJson(res, 400, { error: err.message });
+  }
+}
+
+// ---- atualização (via GitHub Releases) --------------------------------------
+// Protegidas por login (só quem administra o painel deve poder disparar isso).
+
+/** GET /api/atualizacao — consulta a última versão publicada no GitHub. */
+async function handleVerificarAtualizacao(req, res) {
+  try {
+    const info = await updater.verificarAtualizacao();
+    sendJson(res, 200, info);
+  } catch (err) {
+    sendJson(res, 502, { error: err.message });
+  }
+}
+
+/**
+ * POST /api/atualizacao/aplicar — baixa e aplica a última versão, depois
+ * reinicia o processo sozinho (sobe um processo novo e derruba este).
+ */
+async function handleAplicarAtualizacao(req, res) {
+  try {
+    const info = await updater.verificarAtualizacao();
+    if (!info.temAtualizacao) {
+      return sendJson(res, 200, { ok: true, jaAtualizado: true, versaoAtual: info.versaoAtual });
+    }
+
+    const resultado = await updater.baixarEAplicarAtualizacao(info.tarballUrl);
+    sendJson(res, 200, {
+      ok: true,
+      versaoInstalada: info.versaoDisponivel,
+      arquivosAtualizados: resultado.arquivosGravados,
+    });
+
+    // dá tempo da resposta acima chegar no navegador antes de reiniciar
+    setTimeout(() => {
+      console.log(`[server] Atualização para v${info.versaoDisponivel} aplicada - reiniciando...`);
+      server.close(() => {
+        const processoNovo = spawn(process.execPath, [__filename], {
+          cwd: __dirname,
+          detached: true,
+          stdio: "ignore",
+        });
+        processoNovo.unref();
+        process.exit(0);
+      });
+    }, 500);
+  } catch (err) {
+    console.error("Falha ao aplicar atualização:", err);
+    sendJson(res, 502, { error: err.message });
   }
 }
 
@@ -615,6 +667,14 @@ const server = http.createServer(async (req, res) => {
     if (pathname === "/api/produtos") {
       if (!exigirAutenticacao(req, res)) return;
       return handleProdutos(req, res, url.searchParams);
+    }
+    if (pathname === "/api/atualizacao") {
+      if (!exigirAutenticacao(req, res)) return;
+      return handleVerificarAtualizacao(req, res);
+    }
+    if (pathname === "/api/atualizacao/aplicar" && req.method === "POST") {
+      if (!exigirAutenticacao(req, res)) return;
+      return handleAplicarAtualizacao(req, res);
     }
 
     const painelIdMatch = pathname.match(/^\/api\/paineis\/([^/]+)$/);
