@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "painel-ofertas",
+      "runtimeExecutable": "node",
+      "runtimeArgs": ["src/server.js"],
+      "port": 3000
+    },
+    {
+      "name": "cris-oliveira-site",
+      "runtimeExecutable": "python",
+      "runtimeArgs": ["-m", "http.server", "8090", "--directory", "C:/0/cris-oliveira"],
+      "port": 8090
+    },
+    {
+      "name": "agenda-backend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/0/agenda-consultores", "run", "dev", "-w", "backend"],
+      "port": 3001
+    },
+    {
+      "name": "agenda-frontend",
+      "runtimeExecutable": "npm",
+      "runtimeArgs": ["--prefix", "C:/0/agenda-consultores", "run", "dev", "-w", "frontend"],
+      "port": 5173
+    }
+  ]
+}

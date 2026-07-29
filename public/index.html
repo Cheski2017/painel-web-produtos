@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Painel WEB de Produtos</title>
+<link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <header class="topbar">
+    <div class="topbar__title">
+      <span class="topbar__logo" aria-hidden="true">🏷️</span>
+      <h1>Painel WEB de Produtos</h1>
+    </div>
+
+    <nav class="topbar__nav">
+      <button id="themeToggleBtn" class="btn btn--ghost btn--icon" type="button" title="Alternar tema claro/escuro" aria-label="Alternar tema claro/escuro">🌙</button>
+      <a href="#/" class="btn btn--ghost" id="navMeusPaineis" hidden>Meus painéis</a>
+      <a href="#/editor/novo" class="btn" id="navNovoPainel" hidden>+ Novo painel</a>
+      <button id="logoutBtn" class="btn btn--ghost" type="button" hidden>Sair</button>
+    </nav>
+  </header>
+
+  <main id="content">
+
+    <!-- ==================== LOGIN ==================== -->
+    <section id="view-login" class="view" hidden>
+      <div class="login-caixa">
+        <div class="login-caixa__topo">
+          <h2>Entrar</h2>
+          <button id="loginConfigToggleBtn" class="btn btn--ghost btn--icon" type="button" title="Configurar conexão com a API" aria-label="Configurar conexão com a API">⚙️</button>
+        </div>
+
+        <form id="loginForm" class="login-form">
+          <label class="field">
+            <span>Usuário</span>
+            <input id="loginUsuario" type="text" autocomplete="username" required />
+          </label>
+          <label class="field">
+            <span>Senha</span>
+            <input id="loginSenha" type="password" autocomplete="current-password" required />
+          </label>
+          <p id="loginErro" class="status-line status-line--erro" aria-live="polite"></p>
+          <button type="submit" id="loginSubmitBtn" class="btn">Entrar</button>
+        </form>
+
+        <div id="loginConfigPainel" class="login-config" hidden>
+          <p class="login-config__titulo">Configuração da conexão com a API</p>
+          <form id="configForm">
+            <label class="field">
+              <span>Endereço da API</span>
+              <input id="configBaseUrl" type="text" placeholder="https://SEU-ENDERECO:PORTA" required />
+            </label>
+            <label class="field">
+              <span>Usuário</span>
+              <input id="configUsuario" type="text" required />
+            </label>
+            <label class="field">
+              <span>Senha</span>
+              <input id="configSenha" type="password" required />
+            </label>
+            <p id="configStatus" class="status-line" aria-live="polite"></p>
+            <div class="login-config__acoes">
+              <button type="button" id="configTestarBtn" class="btn btn--ghost">Testar conexão</button>
+              <button type="submit" class="btn">Salvar</button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </section>
+
+    <!-- ==================== LISTA DE PAINÉIS ==================== -->
+    <section id="view-lista" class="view" hidden>
+      <p id="listaStatus" class="status-line" aria-live="polite"></p>
+      <div id="listaPaineis" class="paineis-list"></div>
+      <div id="listaEmpty" class="empty-state" hidden>
+        Nenhum painel criado ainda. Clique em <strong>+ Novo painel</strong> para começar.
+      </div>
+    </section>
+
+    <!-- ==================== EDITOR DE PAINEL ==================== -->
+    <section id="view-editor" class="view" hidden>
+      <h2 id="editorTitulo">Novo painel</h2>
+
+      <form id="editorForm" class="editor-form">
+        <div class="editor-form__grid">
+          <label class="field">
+            <span>Nome do painel</span>
+            <input id="editorNome" type="text" placeholder="Ex: Painel Açougue Fim de Semana" required />
+          </label>
+
+          <label class="field">
+            <span>Loja</span>
+            <select id="editorUnidade" aria-label="Selecionar unidade/loja"></select>
+          </label>
+
+          <label class="field">
+            <span>Departamento</span>
+            <select id="editorDepartamento" aria-label="Selecionar departamento">
+              <option value="">Selecione…</option>
+            </select>
+          </label>
+        </div>
+
+        <div id="editorCampos" class="campos-exibidos" hidden>
+          <span class="campos-exibidos__titulo">Campos exibidos no painel</span>
+          <div id="camposExibidosLista" class="campos-exibidos__opcoes"></div>
+        </div>
+
+        <div id="editorPicker" class="item-picker" hidden>
+          <div class="item-picker__toolbar">
+            <input id="pickerSearch" type="search" placeholder="Buscar produto ou marca…" />
+            <span id="pickerContagem" class="item-picker__contagem"></span>
+            <button type="button" id="pickerSelecionarTodos" class="btn btn--ghost">Selecionar todos</button>
+            <button type="button" id="pickerLimparTodos" class="btn btn--ghost">Limpar seleção</button>
+          </div>
+          <p id="pickerStatus" class="status-line" aria-live="polite"></p>
+          <div id="pickerLista" class="item-picker__lista"></div>
+        </div>
+
+        <div class="editor-form__acoes">
+          <a href="#/" class="btn btn--ghost">Cancelar</a>
+          <button type="submit" id="editorSalvar" class="btn" disabled>Salvar painel</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ==================== EXIBIÇÃO DO PAINEL ==================== -->
+    <section id="view-display" class="view" hidden>
+      <div class="display-header">
+        <h2 id="displayNome"></h2>
+        <div class="display-header__acoes">
+          <div class="view-toggle" role="group" aria-label="Modo de exibição">
+            <button type="button" id="modoCardsBtn" class="view-toggle__btn" data-modo="cards">▦ Cards</button>
+            <button type="button" id="modoListaBtn" class="view-toggle__btn" data-modo="lista">☰ Lista</button>
+          </div>
+          <label class="field field--colunas" id="colunasField" hidden>
+            <span>Colunas</span>
+            <select id="colunasSelect">
+              <option value="1">1</option>
+              <option value="2">2</option>
+              <option value="3">3</option>
+              <option value="4">4</option>
+            </select>
+          </label>
+          <label class="field field--linhas" title="Quantas linhas de produtos cabem em cada tela (sem rolagem)">
+            <span>Linhas/tela</span>
+            <input id="linhasInput" type="number" min="1" max="20" step="1" />
+          </label>
+          <label class="field field--intervalo" title="De quanto em quanto tempo o painel troca de tela">
+            <span>Trocar tela (s)</span>
+            <input id="intervaloTelaInput" type="number" min="5" max="600" step="1" />
+          </label>
+          <button id="displayRefreshBtn" class="btn" type="button">Atualizar</button>
+          <button id="estiloToggleBtn" class="btn btn--ghost btn--icon" type="button" title="Personalizar aparência" aria-label="Personalizar aparência">🎨</button>
+          <button id="fullscreenBtn" class="btn btn--ghost btn--icon" type="button" title="Exibir em tela cheia" aria-label="Exibir em tela cheia">⛶</button>
+          <a id="displayEditarLink" href="#" class="btn btn--ghost">Editar</a>
+          <a href="#/" class="btn btn--ghost">← Meus painéis</a>
+        </div>
+      </div>
+
+      <div id="estiloPainel" class="estilo-painel" hidden>
+        <label class="field">
+          <span>Tamanho da fonte</span>
+          <select id="estiloTamanhoFonte">
+            <option value="pequena">Pequena</option>
+            <option value="media">Média</option>
+            <option value="grande">Grande</option>
+            <option value="extra-grande">Extra grande</option>
+          </select>
+        </label>
+        <label class="field">
+          <span>Cor de fundo dos itens</span>
+          <input id="estiloCorFundo" type="color" />
+        </label>
+        <label class="field">
+          <span>Cor do texto dos itens</span>
+          <input id="estiloCorTexto" type="color" />
+        </label>
+        <span class="estilo-painel__obs">(as ofertas continuam destacadas em amarelo)</span>
+        <button type="button" id="estiloRestaurarBtn" class="btn btn--ghost">Restaurar padrão</button>
+      </div>
+
+      <p id="displayStatus" class="status-line" aria-live="polite"></p>
+      <div id="grid" class="grid"></div>
+      <div id="emptyState" class="empty-state" hidden>
+        Nenhum produto neste painel.
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer">
+    <span id="lastUpdated"></span>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>
