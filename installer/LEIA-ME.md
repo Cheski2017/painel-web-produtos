@@ -63,10 +63,17 @@ precisa instalar nada nelas.
 
 ## 5. Atualizando para uma versão nova do painel
 
-Gere um novo instalador (seção 1) e rode ele de novo na máquina servidor —
-reconhece a instalação existente, atualiza os arquivos e **não mexe** no
-`.env`/`data\` (painéis salvos e configuração da API continuam do jeito que
-estavam).
+Na maioria das vezes **não precisa gerar instalador novo nem mexer na
+máquina do cliente**: o próprio painel se atualiza sozinho, direto do
+GitHub — quem está logado vê um botão "Atualizações" no topo, que baixa e
+aplica a versão mais nova e reinicia sozinho (não mexe em `.env`/`data\`).
+Veja a seção 7 do [`README.md`](../README.md) principal para o processo de
+publicar uma nova versão.
+
+Só vale gerar um instalador novo (seção 1) e rodar de novo na máquina
+servidor se precisar mudar algo do **próprio instalador** (ex: nova regra
+de firewall, novo atalho) - nesse caso ele reconhece a instalação existente
+e não mexe no `.env`/`data\`.
 
 ## 6. Desinstalando
 
