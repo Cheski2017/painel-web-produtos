@@ -1,0 +1,56 @@
+PAINEL DE OFERTAS - COMO INSTALAR
+===================================
+
+Isto instala o Painel de Ofertas nesta máquina como o "servidor" da loja -
+ele fica rodando sozinho, e outros computadores da rede acessam pelo
+navegador (não precisam instalar nada).
+
+PASSO A PASSO
+-------------
+
+1. Extraia esta pasta inteira em algum lugar fixo, por exemplo:
+   C:\PainelOfertas
+
+   (Não rode direto de dentro do .zip - extraia primeiro.)
+
+2. Clique com o BOTÃO DIREITO em "INSTALAR.bat" e escolha
+   "Executar como administrador".
+
+   Uma janela do Windows vai pedir confirmação (isso é normal, é o Windows
+   perguntando se pode dar permissão de administrador) - clique em "Sim".
+
+3. Aguarde a janela preta terminar (mostra o progresso). No final, ela
+   mostra os endereços para acessar o painel - anote o que aparecer em
+   "De outros computadores da rede".
+
+4. O navegador abre sozinho na tela de login. Clique no ícone de
+   engrenagem (⚙️) e preencha o endereço da API, usuário e senha do seu
+   sistema RP Info. Use "Testar conexão" antes de salvar.
+
+5. Depois de salvar, entre na tela de login com esse mesmo usuário e senha.
+
+PRONTO. As outras máquinas da loja só precisam abrir o navegador no
+endereço anotado no passo 3 (algo como http://192.168.X.X:3000) e entrar
+com o mesmo usuário/senha - não precisam instalar nada.
+
+NO DIA A DIA
+------------
+
+Dentro da pasta "scripts", tem atalhos simples:
+- verificar-status.bat  -> mostra se está tudo rodando
+- iniciar.bat / parar.bat / reiniciar.bat -> controle manual
+
+ATUALIZAÇÕES
+------------
+
+Depois de instalado, o próprio painel se atualiza sozinho: quem estiver
+logado vê um botão "Atualizações" no topo da tela, que baixa e aplica
+novas versões automaticamente. Não precisa baixar este pacote de novo.
+
+DESINSTALANDO
+--------------
+
+Clique com o botão direito em "DESINSTALAR.bat" -> "Executar como
+administrador". Isso para o painel e libera a porta do firewall, mas não
+apaga os painéis salvos nem a configuração (ficam em "app\data" e
+"app\.env") - apague a pasta inteira manualmente se quiser remover tudo.

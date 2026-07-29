@@ -4,4 +4,6 @@ data/*
 node_modules/
 *.log
 installer/output/
+installer/portatil/output/
+installer/portatil/cache/
 .claude/settings.local.json

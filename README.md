@@ -228,6 +228,22 @@ precisa desse instalador; as outras só abrem o navegador e entram com
 usuário/senha. Veja [`installer/LEIA-ME.md`](installer/LEIA-ME.md) para o
 passo a passo completo.
 
+⚠️ Esse instalador `.exe` (sem assinatura digital) pode ser classificado
+como falso positivo pelo Windows Defender (`Trojan:Win32/Wacatac.B!ml`) por
+causa do comportamento de baixar o Node.js e mexer em tarefa
+agendada/firewall sozinho — comum para instaladores desse tipo sem
+certificado de assinatura de código. Se isso acontecer, use a alternativa
+abaixo.
+
+### Alternativa: pacote portátil (sem instalador .exe)
+
+Se o instalador acima for barrado por antivírus, tem uma alternativa em
+[`installer/portatil/`](installer/portatil/LEIA-ME.md): um `.zip` com o
+Node.js já incluso (não baixa nada da internet) e um `.bat` simples em vez
+de um executável compilado — testado sem nenhuma detecção de antivírus.
+Fica bem maior (~35MB) por carregar o Node.js dentro, mas é a opção mais
+confiável até termos um certificado de assinatura de código.
+
 ## 7. Atualizações
 
 O painel se atualiza sozinho a partir de [releases publicadas no GitHub]

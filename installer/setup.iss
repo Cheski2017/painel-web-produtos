@@ -29,7 +29,7 @@ DefaultDirName={autopf}\PainelOfertas
 DefaultGroupName={#MyAppName}
 DisableProgramGroupPage=yes
 PrivilegesRequired=admin
-ArchitecturesInstallIn64BitMode=x64
+ArchitecturesInstallIn64BitMode=x64compatible
 OutputDir=output
 OutputBaseFilename=PainelOfertasSetup
 Compression=lzma2
@@ -65,7 +65,7 @@ Name: "{group}\Desinstalar {#MyAppName}"; Filename: "{uninstallexe}"
 Filename: "{app}\scripts\abrir-painel.bat"; WorkingDir: "{app}\scripts"; Description: "Abrir o Painel de Ofertas no navegador"; Flags: postinstall shellexec nowait skipifsilent runasoriginaluser
 
 [UninstallRun]
-Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\desinstalar-servico.ps1"""; Flags: runhidden waituntilterminated
+Filename: "powershell.exe"; Parameters: "-NoProfile -ExecutionPolicy Bypass -File ""{app}\scripts\desinstalar-servico.ps1"""; Flags: runhidden waituntilterminated; RunOnceId: "RemoverServicoPainelOfertas"
 
 [Code]
 procedure ExecutarInstaladorDeServico;
