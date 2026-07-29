@@ -198,6 +198,11 @@ CNPJ manualmente.
     (é o que a TV consome).
   - `GET /api/produtos/:codigo/imagem?unidade=Y` — imagem do produto
     (descomprimida sob demanda, com cache); pública.
+  - `GET /api/atualizacao`, `POST /api/atualizacao/aplicar` — consulta e
+    aplica atualizações via GitHub Releases (ver seção 7); protegidas.
+- `src/updater.js` — verifica a última release publicada no GitHub e, se
+  houver uma versão mais nova, baixa e aplica (sem dependências: descompacta
+  o `.tar.gz` da release na mão, com `zlib` + leitura manual do formato TAR).
 - `src/discover.js` — script de linha de comando para explorar os
   departamentos/unidades cadastrados (ver seção 2).
 - `public/` — front-end estático (HTML/CSS/JS puro, sem framework), com
@@ -223,7 +228,46 @@ precisa desse instalador; as outras só abrem o navegador e entram com
 usuário/senha. Veja [`installer/LEIA-ME.md`](installer/LEIA-ME.md) para o
 passo a passo completo.
 
-## 7. Limitações conhecidas / próximos passos
+## 7. Atualizações
+
+O painel se atualiza sozinho a partir de [releases publicadas no GitHub]
+(https://github.com/Cheski2017/painel-web-produtos/releases). Quem está
+logado vê um botão **"Atualizações"** no topo — ele consulta a última
+release, e se houver uma versão mais nova, mostra as notas e um botão
+**"Atualizar agora"**. Ao clicar, o servidor baixa o código-fonte da
+release, substitui `src/`, `public/` e `package.json` (nunca `.env` nem
+`data/` — a configuração da API e os painéis salvos não são afetados) e
+reinicia sozinho (sobe um processo novo e derruba o antigo).
+
+### Publicando uma nova versão
+
+1. Suba as mudanças normalmente (`git add`, `git commit`, `git push`).
+2. Atualize `"version"` no `package.json` (ex: `1.0.1` → `1.0.2`).
+3. Crie uma tag e uma release correspondentes:
+
+   ```bash
+   git tag -a v1.0.2 -m "Descrição da versão"
+   git push origin v1.0.2
+   gh release create v1.0.2 --title "v1.0.2" --notes "O que mudou nessa versão"
+   ```
+
+   (sem o `gh` instalado, dá pra criar a release direto pela interface do
+   GitHub, em "Releases" → "Draft a new release")
+
+A partir daí, qualquer instalação desatualizada vai ver o botão
+"Atualizações" acender sozinho na próxima vez que alguém abrir o painel de
+configuração e clicar para conferir.
+
+### Detalhe técnico
+
+Como o projeto não usa dependências, a extração do `.tar.gz` da release é
+feita "na mão": `zlib` (nativo do Node) descomprime o gzip, e o formato TAR
+por baixo é simples o suficiente (blocos de 512 bytes) para ler sem
+biblioteca nenhuma — ver `lerEntradasTar` em `src/updater.js`. Testado de
+ponta a ponta (baixar, extrair, reiniciar sozinho, e confirmar que
+`data/config.json`/`data/paineis.json` não são tocados).
+
+## 8. Limitações conhecidas / próximos passos
 
 - A paginação (tanto do catálogo quanto das ofertas) assume que o cursor de
   próxima página corresponde ao código do último produto da página
@@ -248,3 +292,12 @@ passo a passo completo.
   a loja cadastrar um produto novo no departamento depois que o painel foi
   criado, ele não aparece automaticamente — é preciso abrir o painel em
   "Editar" para incluí-lo.
+- Depois de aplicar uma atualização, o servidor reinicia sozinho subindo um
+  processo novo antes de derrubar o antigo — funciona certinho tanto rodando
+  na mão quanto pela Tarefa Agendada do instalador Windows (testado). Uma
+  consequência: como quem reinicia é o próprio processo (não a Tarefa
+  Agendada), o "Verificar status" pode mostrar a tarefa como "não rodando"
+  logo depois de uma atualização mesmo com o site no ar — nesse caso confie
+  no resultado de "site respondendo", que é checado à parte.
+- A sessão de login fica em memória; reiniciar o servidor (inclusive depois
+  de aplicar uma atualização) desloga todo mundo. É rápido entrar de novo.
