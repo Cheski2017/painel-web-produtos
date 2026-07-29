@@ -39,6 +39,28 @@ function sanitizarEstilo(estilo) {
   };
 }
 
+// Layout de exibição (cards x lista, colunas, linhas por tela, intervalo de
+// troca de tela) - salvo por painel, pelo mesmo motivo do estilo: cada
+// painel pode ser aberto em uma TV/navegador diferente do que foi usado
+// para configurá-lo, então não dá pra confiar em localStorage do navegador.
+const MODOS_VALIDOS = ["cards", "lista"];
+const LAYOUT_PADRAO = { modo: "cards", colunas: 2, linhas: 6, intervaloTela: 20 };
+
+function numeroDentroDaFaixa(valor, min, max, padrao) {
+  const n = Number(valor);
+  return Number.isFinite(n) && n >= min && n <= max ? Math.round(n) : padrao;
+}
+
+function sanitizarLayout(layout) {
+  if (!layout || typeof layout !== "object") return null;
+  return {
+    modo: MODOS_VALIDOS.includes(layout.modo) ? layout.modo : LAYOUT_PADRAO.modo,
+    colunas: numeroDentroDaFaixa(layout.colunas, 1, 4, LAYOUT_PADRAO.colunas),
+    linhas: numeroDentroDaFaixa(layout.linhas, 1, 20, LAYOUT_PADRAO.linhas),
+    intervaloTela: numeroDentroDaFaixa(layout.intervaloTela, 5, 600, LAYOUT_PADRAO.intervaloTela),
+  };
+}
+
 function ensureDataFile() {
   if (!fs.existsSync(DATA_DIR)) fs.mkdirSync(DATA_DIR, { recursive: true });
   if (!fs.existsSync(DATA_FILE)) fs.writeFileSync(DATA_FILE, "[]", "utf8");
@@ -79,10 +101,13 @@ function getPainel(id) {
   if (painel && !painel.estilo) {
     painel.estilo = { ...ESTILO_PADRAO };
   }
+  if (painel && !painel.layout) {
+    painel.layout = { ...LAYOUT_PADRAO };
+  }
   return painel;
 }
 
-function createPainel({ nome, departamento, unidade, itensSelecionados, camposExibidos, estilo }) {
+function createPainel({ nome, departamento, unidade, itensSelecionados, camposExibidos, estilo, layout }) {
   if (!nome || !String(nome).trim()) throw new Error("Nome do painel é obrigatório");
   if (!departamento) throw new Error("Departamento é obrigatório");
   if (!unidade) throw new Error("Unidade (loja) é obrigatória");
@@ -97,6 +122,7 @@ function createPainel({ nome, departamento, unidade, itensSelecionados, camposEx
     itensSelecionados: Array.isArray(itensSelecionados) ? itensSelecionados.map(String) : [],
     camposExibidos: sanitizarCampos(camposExibidos) ?? [...CAMPOS_PADRAO],
     estilo: sanitizarEstilo(estilo) ?? { ...ESTILO_PADRAO },
+    layout: sanitizarLayout(layout) ?? { ...LAYOUT_PADRAO },
     criadoEm: agora,
     atualizadoEm: agora,
   };
@@ -105,7 +131,7 @@ function createPainel({ nome, departamento, unidade, itensSelecionados, camposEx
   return painel;
 }
 
-function updatePainel(id, { nome, departamento, unidade, itensSelecionados, camposExibidos, estilo }) {
+function updatePainel(id, { nome, departamento, unidade, itensSelecionados, camposExibidos, estilo, layout }) {
   const paineis = readAll();
   const idx = paineis.findIndex((p) => p.id === id);
   if (idx === -1) throw new Error("Painel não encontrado");
@@ -124,6 +150,7 @@ function updatePainel(id, { nome, departamento, unidade, itensSelecionados, camp
       : atual.itensSelecionados,
     camposExibidos: sanitizarCampos(camposExibidos) ?? atual.camposExibidos ?? [...CAMPOS_PADRAO],
     estilo: estilo !== undefined ? sanitizarEstilo(estilo) ?? { ...ESTILO_PADRAO } : atual.estilo ?? { ...ESTILO_PADRAO },
+    layout: layout !== undefined ? sanitizarLayout(layout) ?? { ...LAYOUT_PADRAO } : atual.layout ?? { ...LAYOUT_PADRAO },
     atualizadoEm: new Date().toISOString(),
   };
 
@@ -154,6 +181,28 @@ function updateEstilo(id, estilo) {
   return atualizado;
 }
 
+/**
+ * Atualiza só o layout de exibição (cards/lista, colunas, linhas, intervalo
+ * de troca de tela) de um painel - mesma ideia do `updateEstilo`, usado
+ * pelos controles que ficam na própria tela de exibição (pública, sem
+ * login).
+ */
+function updateLayout(id, layout) {
+  const paineis = readAll();
+  const idx = paineis.findIndex((p) => p.id === id);
+  if (idx === -1) throw new Error("Painel não encontrado");
+
+  const atualizado = {
+    ...paineis[idx],
+    layout: sanitizarLayout(layout) ?? { ...LAYOUT_PADRAO },
+    atualizadoEm: new Date().toISOString(),
+  };
+
+  paineis[idx] = atualizado;
+  writeAll(paineis);
+  return atualizado;
+}
+
 function deletePainel(id) {
   const paineis = readAll();
   const idx = paineis.findIndex((p) => p.id === id);
@@ -169,6 +218,7 @@ module.exports = {
   createPainel,
   updatePainel,
   updateEstilo,
+  updateLayout,
   deletePainel,
   CAMPOS_DISPONIVEIS,
 };

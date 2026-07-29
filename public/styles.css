@@ -419,6 +419,22 @@ main#content {
   text-align: center;
 }
 
+.versao-badge {
+  position: fixed;
+  bottom: 8px;
+  right: 12px;
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  background: var(--surface-1);
+  border: 1px solid var(--gridline);
+  padding: 2px 8px;
+  border-radius: 999px;
+  opacity: 0.75;
+  pointer-events: none;
+  z-index: 5;
+}
+.versao-badge:empty { display: none; }
+
 /* ==================== LISTA DE PAINÉIS ==================== */
 
 .paineis-list {

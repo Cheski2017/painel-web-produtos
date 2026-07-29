@@ -16,7 +16,7 @@
 ;   - Abre o navegador na tela de login/configuração no final.
 
 #define MyAppName "Painel de Ofertas"
-#define MyAppVersion "1.0.1"
+#define MyAppVersion "1.0.2"
 #define MyAppPublisher "Meu Mercado"
 #define MyAppExeName "node.exe"
 

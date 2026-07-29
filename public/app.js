@@ -13,6 +13,12 @@
   const LINHAS_PADRAO = 6;
   const INTERVALO_TELA_PADRAO_SEGUNDOS = 20;
 
+  // Layout de exibição (cards x lista, colunas, linhas por tela, intervalo de
+  // troca de tela) - salvo por painel no servidor (não no localStorage do
+  // navegador), porque a tela que exibe o painel (a TV) costuma ser um
+  // dispositivo diferente de quem configurou.
+  const LAYOUT_PADRAO = { modo: "cards", colunas: 2, linhas: LINHAS_PADRAO, intervaloTela: INTERVALO_TELA_PADRAO_SEGUNDOS };
+
   // Aparência do painel: tamanho de fonte geral + cor dos itens que NÃO
   // estão em oferta (o destaque de oferta continua fixo em amarelo/dourado).
   const ESCALA_FONTE = { pequena: 0.85, media: 1, grande: 1.2, "extra-grande": 1.45 };
@@ -38,7 +44,7 @@
     displayUnidade: "",
     displayCampos: new Set(CAMPOS_DISPONIVEIS.map((c) => c.chave)),
     displayEstilo: { ...ESTILO_PADRAO },
-    displayPrefs: carregarPreferenciasExibicao(),
+    displayPrefs: { ...LAYOUT_PADRAO },
     autenticado: false,
   };
 
@@ -140,29 +146,23 @@
 
   aplicarTema(temaEfetivoAtual());
 
-  // ==================== PREFERÊNCIAS DE EXIBIÇÃO (cards/lista) ====================
+  // ==================== LAYOUT DE EXIBIÇÃO (cards/lista) ====================
 
-  const DISPLAY_PREFS_KEY = "painelOfertas:exibicao";
-
-  function carregarPreferenciasExibicao() {
-    try {
-      const salvo = JSON.parse(localStorage.getItem(DISPLAY_PREFS_KEY));
-      return {
-        modo: salvo?.modo === "lista" ? "lista" : "cards",
-        colunas: Number(salvo?.colunas) >= 1 && Number(salvo?.colunas) <= 4 ? Number(salvo.colunas) : 2,
-        linhas: Number(salvo?.linhas) >= 1 && Number(salvo?.linhas) <= 20 ? Number(salvo.linhas) : LINHAS_PADRAO,
-        intervaloTela:
-          Number(salvo?.intervaloTela) >= 5 && Number(salvo?.intervaloTela) <= 600
-            ? Number(salvo.intervaloTela)
-            : INTERVALO_TELA_PADRAO_SEGUNDOS,
-      };
-    } catch {
-      return { modo: "cards", colunas: 2, linhas: LINHAS_PADRAO, intervaloTela: INTERVALO_TELA_PADRAO_SEGUNDOS };
-    }
-  }
-
-  function salvarPreferenciasExibicao() {
-    localStorage.setItem(DISPLAY_PREFS_KEY, JSON.stringify(state.displayPrefs));
+  let salvarLayoutTimer = null;
+  function salvarLayoutAtual() {
+    if (!state.displayPainelId) return;
+    clearTimeout(salvarLayoutTimer);
+    salvarLayoutTimer = setTimeout(async () => {
+      try {
+        await fetchJson(`/api/paineis/${state.displayPainelId}/layout`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ layout: state.displayPrefs }),
+        });
+      } catch (err) {
+        console.error("Falha ao salvar layout do painel:", err.message);
+      }
+    }, 400);
   }
 
   function aplicarControlesExibicao() {
@@ -177,7 +177,7 @@
   document.getElementById("modoCardsBtn").addEventListener("click", () => {
     state.displayPrefs.modo = "cards";
     state.displayPage = 0;
-    salvarPreferenciasExibicao();
+    salvarLayoutAtual();
     aplicarControlesExibicao();
     atualizarPaginaAtual();
   });
@@ -185,7 +185,7 @@
   document.getElementById("modoListaBtn").addEventListener("click", () => {
     state.displayPrefs.modo = "lista";
     state.displayPage = 0;
-    salvarPreferenciasExibicao();
+    salvarLayoutAtual();
     aplicarControlesExibicao();
     atualizarPaginaAtual();
   });
@@ -193,7 +193,7 @@
   document.getElementById("colunasSelect").addEventListener("change", (e) => {
     state.displayPrefs.colunas = Number(e.target.value) || 1;
     state.displayPage = 0;
-    salvarPreferenciasExibicao();
+    salvarLayoutAtual();
     atualizarPaginaAtual();
   });
 
@@ -202,7 +202,7 @@
     state.displayPrefs.linhas = valor;
     e.target.value = String(valor);
     state.displayPage = 0;
-    salvarPreferenciasExibicao();
+    salvarLayoutAtual();
     atualizarPaginaAtual();
   });
 
@@ -210,7 +210,7 @@
     const valor = Math.min(600, Math.max(5, Number(e.target.value) || INTERVALO_TELA_PADRAO_SEGUNDOS));
     state.displayPrefs.intervaloTela = valor;
     e.target.value = String(valor);
-    salvarPreferenciasExibicao();
+    salvarLayoutAtual();
     iniciarRotacaoTelas();
   });
 
@@ -955,6 +955,13 @@
       };
       aplicarEstiloPersonalizado();
       atualizarControlesEstilo();
+      state.displayPrefs = {
+        modo: data.painel?.layout?.modo === "lista" ? "lista" : "cards",
+        colunas: Number(data.painel?.layout?.colunas) || LAYOUT_PADRAO.colunas,
+        linhas: Number(data.painel?.layout?.linhas) || LAYOUT_PADRAO.linhas,
+        intervaloTela: Number(data.painel?.layout?.intervaloTela) || LAYOUT_PADRAO.intervaloTela,
+      };
+      aplicarControlesExibicao();
       state.displayItens = data.content || [];
       state.displayPage = 0;
       atualizarPaginaAtual();
@@ -984,6 +991,16 @@
       /* usa apenas atualização manual se /api/config falhar */
     }
   }
+
+  async function carregarVersao() {
+    try {
+      const cfg = await fetchJson("/api/config");
+      if (cfg.versao) document.getElementById("versaoBadge").textContent = `v${cfg.versao}`;
+    } catch {
+      /* selo de versão é só informativo - se falhar, simplesmente não mostra nada */
+    }
+  }
+  carregarVersao();
 
   router();
 })();

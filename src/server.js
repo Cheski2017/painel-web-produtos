@@ -177,6 +177,7 @@ async function handleConfig(req, res) {
   sendJson(res, 200, {
     refreshIntervalMinutes: REFRESH_MINUTES,
     unidadesPadrao: UNIDADES_PADRAO,
+    versao: updater.obterVersaoAtual(),
   });
 }
 
@@ -573,6 +574,24 @@ async function handleAtualizarEstiloPainel(req, res, id) {
   }
 }
 
+/**
+ * PUT /api/paineis/:id/layout — cards x lista, colunas, linhas por tela,
+ * intervalo de troca de tela. Pública pelo mesmo motivo do estilo: os
+ * controles ficam na própria tela de exibição, e precisam ficar salvos por
+ * painel (não no localStorage do navegador) para valer em qualquer
+ * TV/dispositivo que abrir esse painel, não só em quem configurou.
+ */
+async function handleAtualizarLayoutPainel(req, res, id) {
+  try {
+    const body = await readJsonBody(req);
+    const painel = paineisStore.updateLayout(id, body.layout);
+    sendJson(res, 200, { layout: painel.layout });
+  } catch (err) {
+    const status = /não encontrado/i.test(err.message) ? 404 : 400;
+    sendJson(res, status, { error: err.message });
+  }
+}
+
 async function handleExcluirPainel(req, res, id) {
   const ok = paineisStore.deletePainel(id);
   if (!ok) return sendJson(res, 404, { error: "Painel não encontrado" });
@@ -607,6 +626,7 @@ async function handlePainelProdutos(req, res, id) {
         unidade: painel.unidade,
         camposExibidos: painel.camposExibidos,
         estilo: painel.estilo,
+        layout: painel.layout,
       },
       total: content.length,
       totalEmOferta: content.filter((i) => i.emOferta).length,
@@ -651,6 +671,9 @@ const server = http.createServer(async (req, res) => {
 
     const painelEstiloMatch = pathname.match(/^\/api\/paineis\/([^/]+)\/estilo$/);
     if (painelEstiloMatch && req.method === "PUT") return handleAtualizarEstiloPainel(req, res, painelEstiloMatch[1]);
+
+    const painelLayoutMatch = pathname.match(/^\/api\/paineis\/([^/]+)\/layout$/);
+    if (painelLayoutMatch && req.method === "PUT") return handleAtualizarLayoutPainel(req, res, painelLayoutMatch[1]);
 
     const imagemProdutoMatch = pathname.match(/^\/api\/produtos\/([^/]+)\/imagem$/);
     if (imagemProdutoMatch) return handleImagemProduto(req, res, imagemProdutoMatch[1], url.searchParams);
