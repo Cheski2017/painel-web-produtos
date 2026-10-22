@@ -43,7 +43,7 @@ function sanitizarEstilo(estilo) {
 // troca de tela) - salvo por painel, pelo mesmo motivo do estilo: cada
 // painel pode ser aberto em uma TV/navegador diferente do que foi usado
 // para configurá-lo, então não dá pra confiar em localStorage do navegador.
-const MODOS_VALIDOS = ["cards", "lista"];
+const MODOS_VALIDOS = ["cards", "lista", "destaque"];
 const LAYOUT_PADRAO = { modo: "cards", colunas: 2, linhas: 6, intervaloTela: 20 };
 
 function numeroDentroDaFaixa(valor, min, max, padrao) {

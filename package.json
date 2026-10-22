@@ -1,6 +1,6 @@
 {
   "name": "painel-ofertas-acougue-padaria",
-  "version": "1.0.2",
+  "version": "1.1.0",
   "description": "Painel web de ofertas de açougue e padaria, integrado à API RP Services (RP Info)",
   "main": "src/server.js",
   "type": "commonjs",

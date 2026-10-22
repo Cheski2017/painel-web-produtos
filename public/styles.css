@@ -693,6 +693,174 @@ main#content {
   text-align: right;
 }
 
+/* ---- modo destaque (um produto por tela, estilo TV de açougue) ----
+   Todas as medidas usam --u (1% da largura do slide em 16:9, calculado no
+   app.js), para o slide ficar com a mesma cara em qualquer resolução. */
+
+.grid--destaque {
+  display: block;
+  width: min(100%, calc((100vh - 230px) * 16 / 9));
+  aspect-ratio: 16 / 9;
+  margin: 0 auto;
+  border-radius: var(--radius);
+}
+
+.destaque {
+  --destaque-fundo: #e30613;
+  --destaque-amarelo: #ffe000;
+  --destaque-claro: #f2f2f0;
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  display: grid;
+  grid-template-columns: 48% 52%;
+  align-items: center;
+  background: var(--destaque-fundo);
+  color: #fff;
+  font-family: "Arial Narrow", "Roboto Condensed", var(--font);
+  animation: destaque-entrar 0.6s ease;
+}
+/* faixa clara à esquerda, atrás da foto */
+.destaque::before {
+  content: "";
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 30%;
+  background: var(--destaque-claro);
+}
+
+@keyframes destaque-entrar {
+  from { opacity: 0; transform: scale(1.015); }
+  to { opacity: 1; transform: none; }
+}
+
+.destaque__faixa {
+  position: absolute;
+  top: calc(4.6 * var(--u));
+  right: calc(-7.2 * var(--u));
+  width: calc(30 * var(--u));
+  transform: rotate(45deg);
+  background: var(--destaque-amarelo);
+  color: var(--destaque-fundo);
+  text-align: center;
+  font-weight: 900;
+  font-size: calc(3.2 * var(--u));
+  letter-spacing: 0.05em;
+  padding: calc(0.8 * var(--u)) 0;
+  box-shadow: 0 calc(0.3 * var(--u)) calc(1 * var(--u)) rgba(0, 0, 0, 0.25);
+  z-index: 2;
+}
+
+.destaque__midia {
+  position: relative;
+  z-index: 1;
+  justify-self: center;
+  width: calc(34 * var(--u));
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.destaque__imagem {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #fff;
+  padding: calc(1.5 * var(--u));
+  border-radius: calc(1.6 * var(--u));
+  box-shadow: 0 calc(0.6 * var(--u)) calc(2.4 * var(--u)) rgba(0, 0, 0, 0.28);
+}
+/* sem foto (ou campo "imagem" desmarcado): bloco amarelo "BAIXOU O PREÇO" */
+.destaque__selo {
+  display: none;
+  width: 82%;
+  aspect-ratio: 1 / 1.15;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-transform: uppercase;
+  background: var(--destaque-amarelo);
+  color: var(--destaque-fundo);
+  font-weight: 900;
+  font-size: calc(5.6 * var(--u));
+  line-height: 1.1;
+  border-radius: calc(0.6 * var(--u));
+}
+.destaque.sem-imagem .destaque__imagem,
+.destaque.sem-imagem .destaque__ilustrativa { display: none; }
+.destaque.sem-imagem .destaque__selo { display: flex; }
+
+.destaque__ilustrativa {
+  position: absolute;
+  z-index: 1;
+  left: calc(1.2 * var(--u));
+  bottom: calc(1.2 * var(--u));
+  font-family: var(--font);
+  font-size: calc(0.9 * var(--u));
+  color: #8a8a86;
+}
+
+.destaque__info {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: calc(1 * var(--u));
+  padding-right: calc(8 * var(--u));
+}
+.destaque__marca {
+  font-size: calc(2 * var(--u) * var(--card-escala-fonte, 1));
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  opacity: 0.85;
+}
+.destaque__nome {
+  margin: 0;
+  font-size: calc(4.8 * var(--u) * var(--card-escala-fonte, 1));
+  font-weight: 700;
+  line-height: 1.1;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+.destaque__de {
+  font-size: calc(2.4 * var(--u));
+  opacity: 0.9;
+}
+.destaque__preco {
+  display: flex;
+  align-items: flex-start;
+  color: var(--destaque-amarelo);
+  font-weight: 900;
+  line-height: 0.9;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 calc(0.3 * var(--u)) calc(0.8 * var(--u)) rgba(0, 0, 0, 0.18);
+}
+.destaque__rs {
+  align-self: flex-end;
+  font-size: calc(4.6 * var(--u));
+  margin: 0 calc(0.8 * var(--u)) calc(0.9 * var(--u)) 0;
+}
+.destaque__inteiro {
+  font-size: calc(14 * var(--u));
+  letter-spacing: -0.02em;
+}
+.destaque__centavos {
+  font-size: calc(6 * var(--u));
+  margin-top: calc(1.2 * var(--u));
+}
+.destaque__desconto {
+  background: var(--destaque-amarelo);
+  color: var(--destaque-fundo);
+  font-weight: 900;
+  font-size: calc(2.6 * var(--u));
+  padding: calc(0.4 * var(--u)) calc(1.4 * var(--u));
+  border-radius: 999px;
+}
+
 /* ---- tela cheia (pensada para exibição em TV) ---- */
 
 #view-display:fullscreen,
@@ -708,6 +876,24 @@ main#content {
 }
 #view-display.is-fullscreen .card__nome { font-size: 1.1rem; }
 #view-display.is-fullscreen .card__preco-atual { font-size: 1.5rem; }
+
+/* destaque em tela cheia: o slide ocupa a TV inteira, sem cabeçalho
+   (Esc sai da tela cheia) */
+#view-display.is-fullscreen.modo-destaque {
+  padding: 0;
+  overflow: hidden;
+}
+#view-display.is-fullscreen.modo-destaque .display-header,
+#view-display.is-fullscreen.modo-destaque .estilo-painel,
+#view-display.is-fullscreen.modo-destaque #displayStatus {
+  display: none;
+}
+#view-display.is-fullscreen.modo-destaque .grid--destaque {
+  width: 100vw;
+  height: 100vh;
+  aspect-ratio: auto;
+  border-radius: 0;
+}
 
 /* ==================== LOGIN ==================== */
 

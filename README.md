@@ -146,6 +146,17 @@ departamento. Os produtos que estiverem em promoção no momento aparecem
 **destacados em outra cor** (borda e fundo amarelo/dourado), com o preço
 antigo riscado e o percentual de desconto, e aparecem primeiro na lista.
 
+Há três modos de exibição, salvos por painel:
+
+- **Cards** — grade de cartões com foto.
+- **Lista** — uma linha por produto, em 1 a 4 colunas.
+- **Destaque** — um produto por tela, ocupando a TV inteira (fundo vermelho,
+  faixa "OFERTA" no canto e preço grande em amarelo), trocando a cada
+  "Trocar tela (s)" segundos. Mostra só os itens em oferta (se não houver
+  nenhum, mostra todos). Produto sem foto cadastrada ganha o selo
+  "BAIXOU O PREÇO" no lugar da imagem. Em tela cheia o cabeçalho some e o
+  slide ocupa a tela toda (Esc sai).
+
 Isso é feito cruzando dois endpoints da API RP Services a cada consulta:
 
 1. **Catálogo de produtos** —

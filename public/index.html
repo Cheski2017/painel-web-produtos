@@ -151,6 +151,7 @@
           <div class="view-toggle" role="group" aria-label="Modo de exibição">
             <button type="button" id="modoCardsBtn" class="view-toggle__btn" data-modo="cards">▦ Cards</button>
             <button type="button" id="modoListaBtn" class="view-toggle__btn" data-modo="lista">☰ Lista</button>
+            <button type="button" id="modoDestaqueBtn" class="view-toggle__btn" data-modo="destaque" title="Um produto por tela, em destaque (ideal para TV)">★ Destaque</button>
           </div>
           <label class="field field--colunas" id="colunasField" hidden>
             <span>Colunas</span>
@@ -161,7 +162,7 @@
               <option value="4">4</option>
             </select>
           </label>
-          <label class="field field--linhas" title="Quantas linhas de produtos cabem em cada tela (sem rolagem)">
+          <label class="field field--linhas" id="linhasField" title="Quantas linhas de produtos cabem em cada tela (sem rolagem)">
             <span>Linhas/tela</span>
             <input id="linhasInput" type="number" min="1" max="20" step="1" />
           </label>

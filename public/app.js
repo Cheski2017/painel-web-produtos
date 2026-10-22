@@ -166,29 +166,28 @@
   }
 
   function aplicarControlesExibicao() {
-    document.getElementById("modoCardsBtn").classList.toggle("is-active", state.displayPrefs.modo === "cards");
-    document.getElementById("modoListaBtn").classList.toggle("is-active", state.displayPrefs.modo === "lista");
-    document.getElementById("colunasField").hidden = state.displayPrefs.modo !== "lista";
+    const modo = state.displayPrefs.modo;
+    document.getElementById("modoCardsBtn").classList.toggle("is-active", modo === "cards");
+    document.getElementById("modoListaBtn").classList.toggle("is-active", modo === "lista");
+    document.getElementById("modoDestaqueBtn").classList.toggle("is-active", modo === "destaque");
+    document.getElementById("colunasField").hidden = modo !== "lista";
+    // no modo destaque cada tela tem um único produto, então "linhas" não se aplica
+    document.getElementById("linhasField").hidden = modo === "destaque";
+    views.display.classList.toggle("modo-destaque", modo === "destaque");
     document.getElementById("colunasSelect").value = String(state.displayPrefs.colunas);
     document.getElementById("linhasInput").value = String(state.displayPrefs.linhas);
     document.getElementById("intervaloTelaInput").value = String(state.displayPrefs.intervaloTela);
   }
 
-  document.getElementById("modoCardsBtn").addEventListener("click", () => {
-    state.displayPrefs.modo = "cards";
-    state.displayPage = 0;
-    salvarLayoutAtual();
-    aplicarControlesExibicao();
-    atualizarPaginaAtual();
-  });
-
-  document.getElementById("modoListaBtn").addEventListener("click", () => {
-    state.displayPrefs.modo = "lista";
-    state.displayPage = 0;
-    salvarLayoutAtual();
-    aplicarControlesExibicao();
-    atualizarPaginaAtual();
-  });
+  for (const btn of document.querySelectorAll(".view-toggle__btn[data-modo]")) {
+    btn.addEventListener("click", () => {
+      state.displayPrefs.modo = btn.dataset.modo;
+      state.displayPage = 0;
+      salvarLayoutAtual();
+      aplicarControlesExibicao();
+      atualizarPaginaAtual();
+    });
+  }
 
   document.getElementById("colunasSelect").addEventListener("change", (e) => {
     state.displayPrefs.colunas = Number(e.target.value) || 1;
@@ -230,6 +229,7 @@
     btn.textContent = emTelaCheia ? "🗗" : "⛶";
     btn.title = emTelaCheia ? "Sair da tela cheia" : "Exibir em tela cheia";
     viewDisplayEl.classList.toggle("is-fullscreen", emTelaCheia);
+    if (!views.display.hidden) atualizarPaginaAtual();
   }
 
   document.getElementById("fullscreenBtn").addEventListener("click", () => {
@@ -867,6 +867,8 @@
    * visíveis, e troca automaticamente de tela a cada X segundos.
    */
   function atualizarPaginaAtual() {
+    if (state.displayPrefs.modo === "destaque") return atualizarDestaqueAtual();
+
     const grid = document.getElementById("grid");
     const modoLista = state.displayPrefs.modo === "lista";
     grid.className = modoLista ? "grid grid--lista" : "grid";
@@ -936,6 +938,82 @@
     grid.appendChild(frag);
   }
 
+  // ---- modo destaque: um produto por tela, no estilo de TV de açougue ----
+
+  /** No destaque só entram as ofertas; se o painel não tiver nenhuma, mostra
+   *  todos os produtos para a TV não ficar vazia. */
+  function itensDestaque() {
+    const ofertas = state.displayItens.filter((i) => i.emOferta);
+    return ofertas.length ? ofertas : state.displayItens;
+  }
+
+  function urlImagemProduto(item) {
+    return `/api/produtos/${encodeURIComponent(item.codigoProduto)}/imagem?unidade=${encodeURIComponent(state.displayUnidade)}`;
+  }
+
+  function atualizarDestaqueAtual() {
+    const grid = document.getElementById("grid");
+    const emptyEl = document.getElementById("emptyState");
+    grid.className = "grid grid--destaque";
+    grid.innerHTML = "";
+
+    const itens = itensDestaque();
+    emptyEl.hidden = itens.length > 0;
+    if (state.displayPage >= itens.length || state.displayPage < 0) state.displayPage = 0;
+
+    // fontes proporcionais à "tela" (1u = 1% da largura útil em 16:9), para
+    // o slide ficar igual em qualquer TV/resolução
+    const unidade = Math.min(grid.clientWidth, (grid.clientHeight * 16) / 9) / 100;
+    grid.style.setProperty("--u", `${unidade}px`);
+    grid.style.setProperty("--card-escala-fonte", ESCALA_FONTE[state.displayEstilo.tamanhoFonte] || 1);
+
+    const item = itens[state.displayPage];
+    if (item) grid.appendChild(montarSlideDestaque(item));
+
+    // já baixa a imagem do próximo para a troca de tela não "piscar"
+    const proximo = itens[(state.displayPage + 1) % itens.length];
+    if (proximo && proximo !== item && state.displayCampos.has("imagem")) new Image().src = urlImagemProduto(proximo);
+
+    const emOferta = state.displayItens.filter((i) => i.emOferta).length;
+    const base = `${state.displayItens.length} produto(s) — ${emOferta} em oferta.`;
+    document.getElementById("displayStatus").textContent =
+      itens.length > 1 ? `${base} Destaque ${state.displayPage + 1} de ${itens.length}.` : base;
+  }
+
+  function montarSlideDestaque(item) {
+    const mostrar = state.displayCampos;
+    const [inteiro, centavos] = (Number(item.precoAtual) || 0).toFixed(2).split(".");
+    const hasPrecoAnterior = item.emOferta && item.precoAnterior > item.precoAtual;
+    const selo = item.emOferta ? "Baixou<br>o preço" : "Confira";
+
+    const slide = document.createElement("article");
+    slide.className = "destaque" + (mostrar.has("imagem") ? "" : " sem-imagem");
+    slide.innerHTML = `
+      ${item.emOferta ? `<div class="destaque__faixa">OFERTA</div>` : ""}
+      <div class="destaque__midia">
+        ${
+          mostrar.has("imagem")
+            ? `<img class="destaque__imagem" src="${urlImagemProduto(item)}" alt="" onerror="this.closest('.destaque').classList.add('sem-imagem')" />`
+            : ""
+        }
+        <div class="destaque__selo">${selo}</div>
+      </div>
+      <span class="destaque__ilustrativa">Imagem ilustrativa</span>
+      <div class="destaque__info">
+        ${mostrar.has("marca") && item.marca ? `<span class="destaque__marca">${escapeHtml(item.marca)}</span>` : ""}
+        <h3 class="destaque__nome">${escapeHtml(item.nomeProduto || "Produto sem nome")}</h3>
+        ${hasPrecoAnterior ? `<span class="destaque__de">De <s>${formatMoney(item.precoAnterior)}</s> por</span>` : ""}
+        <div class="destaque__preco">
+          <span class="destaque__rs">R$</span>
+          <span class="destaque__inteiro">${Number(inteiro).toLocaleString("pt-BR")}</span>
+          <span class="destaque__centavos">,${centavos}</span>
+        </div>
+        ${item.emOferta && item.desconto > 0 ? `<span class="destaque__desconto">-${item.desconto}%</span>` : ""}
+      </div>
+    `;
+    return slide;
+  }
+
   async function carregarDisplay(id) {
     const statusEl = document.getElementById("displayStatus");
     statusEl.textContent = "Carregando ofertas…";
@@ -956,7 +1034,7 @@
       aplicarEstiloPersonalizado();
       atualizarControlesEstilo();
       state.displayPrefs = {
-        modo: data.painel?.layout?.modo === "lista" ? "lista" : "cards",
+        modo: ["lista", "destaque"].includes(data.painel?.layout?.modo) ? data.painel.layout.modo : "cards",
         colunas: Number(data.painel?.layout?.colunas) || LAYOUT_PADRAO.colunas,
         linhas: Number(data.painel?.layout?.linhas) || LAYOUT_PADRAO.linhas,
         intervaloTela: Number(data.painel?.layout?.intervaloTela) || LAYOUT_PADRAO.intervaloTela,
