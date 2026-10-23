@@ -157,6 +157,14 @@ Há três modos de exibição, salvos por painel:
   "BAIXOU O PREÇO" no lugar da imagem. Em tela cheia o cabeçalho some e o
   slide ocupa a tela toda (Esc sai).
 
+  No botão 🎨, com o modo Destaque ativo, dá para personalizar: as cores
+  (fundo, faixa/preço, lateral da foto e texto), o texto da faixa do canto
+  e do selo, se entram só as ofertas ou todos os produtos do painel, se
+  aparecem o "De R$ … por", o % de desconto e o "Imagem ilustrativa", e o
+  **logo da loja** (canto inferior direito — a imagem é reduzida no
+  navegador antes de salvar). "Restaurar padrão" volta cores e textos, mas
+  mantém o logo.
+
 Isso é feito cruzando dois endpoints da API RP Services a cada consulta:
 
 1. **Catálogo de produtos** —

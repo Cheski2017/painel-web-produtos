@@ -647,6 +647,51 @@ main#content {
   color: var(--text-muted);
 }
 
+/* personalização do modo destaque (dentro do painel 🎨) */
+.estilo-destaque {
+  flex-basis: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px 28px;
+  padding-top: 12px;
+  border-top: 1px solid var(--gridline);
+}
+.estilo-destaque__grupo {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px 14px;
+}
+.estilo-destaque__titulo {
+  flex-basis: 100%;
+  font-size: 0.78rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--text-muted);
+}
+.estilo-destaque .field input[type="text"] {
+  min-width: 0;
+  width: 170px;
+}
+.estilo-destaque .field select { min-width: 0; }
+.estilo-destaque__check {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.estilo-destaque__logo {
+  max-height: 40px;
+  max-width: 120px;
+  object-fit: contain;
+  background: var(--gridline);
+  border-radius: 6px;
+  padding: 4px;
+}
+.estilo-destaque__upload { cursor: pointer; }
+
 /* ---- modo lista (uma linha por produto, em N colunas) ---- */
 
 .grid--lista {
@@ -706,9 +751,10 @@ main#content {
 }
 
 .destaque {
-  --destaque-fundo: #e30613;
-  --destaque-amarelo: #ffe000;
-  --destaque-claro: #f2f2f0;
+  /* cores personalizáveis (definidas no #grid pelo app.js) */
+  --destaque-fundo: var(--destaque-corFundo, #e30613);
+  --destaque-amarelo: var(--destaque-corDestaque, #ffe000);
+  --destaque-claro: var(--destaque-corLateral, #f2f2f0);
   position: relative;
   width: 100%;
   height: 100%;
@@ -717,7 +763,7 @@ main#content {
   grid-template-columns: 48% 52%;
   align-items: center;
   background: var(--destaque-fundo);
-  color: #fff;
+  color: var(--destaque-corTexto, #fff);
   font-family: "Arial Narrow", "Roboto Condensed", var(--font);
   animation: destaque-entrar 0.6s ease;
 }
@@ -799,6 +845,16 @@ main#content {
   font-family: var(--font);
   font-size: calc(0.9 * var(--u));
   color: #8a8a86;
+}
+
+.destaque__logo {
+  position: absolute;
+  z-index: 2;
+  right: calc(2.5 * var(--u));
+  bottom: calc(2.5 * var(--u));
+  max-width: calc(18 * var(--u));
+  max-height: calc(8 * var(--u));
+  object-fit: contain;
 }
 
 .destaque__info {

@@ -29,13 +29,47 @@ const TAMANHOS_FONTE_VALIDOS = ["pequena", "media", "grande", "extra-grande"];
 const ESTILO_PADRAO = { tamanhoFonte: "media", corFundo: null, corTexto: null };
 const HEX_COR_REGEX = /^#[0-9a-fA-F]{6}$/;
 
+// Personalização do modo "destaque" (um produto por tela). Cores nulas = cor
+// padrão do slide (vermelho/amarelo). O logo é guardado como data URL já
+// reduzido no navegador, então um limite de ~600KB sobra.
+const DESTAQUE_PRODUTOS_VALIDOS = ["ofertas", "todos"];
+const LOGO_DATA_URL_REGEX = /^data:image\/(png|jpeg|webp);base64,[A-Za-z0-9+/=]+$/;
+const LOGO_MAX_CARACTERES = 600 * 1024;
+
+function corValida(c) {
+  return typeof c === "string" && HEX_COR_REGEX.test(c) ? c : null;
+}
+
+function textoCurto(valor, max) {
+  return typeof valor === "string" ? valor.trim().slice(0, max) : null;
+}
+
+function sanitizarDestaque(d) {
+  if (!d || typeof d !== "object") return null;
+  const logoValido =
+    typeof d.logo === "string" && d.logo.length <= LOGO_MAX_CARACTERES && LOGO_DATA_URL_REGEX.test(d.logo);
+  return {
+    corFundo: corValida(d.corFundo),
+    corDestaque: corValida(d.corDestaque),
+    corLateral: corValida(d.corLateral),
+    corTexto: corValida(d.corTexto),
+    textoFaixa: textoCurto(d.textoFaixa, 30),
+    textoSelo: textoCurto(d.textoSelo, 40),
+    produtos: DESTAQUE_PRODUTOS_VALIDOS.includes(d.produtos) ? d.produtos : "ofertas",
+    mostrarPrecoAnterior: d.mostrarPrecoAnterior !== false,
+    mostrarDesconto: d.mostrarDesconto !== false,
+    mostrarIlustrativa: d.mostrarIlustrativa !== false,
+    logo: logoValido ? d.logo : null,
+  };
+}
+
 function sanitizarEstilo(estilo) {
   if (!estilo || typeof estilo !== "object") return null;
-  const corValida = (c) => (typeof c === "string" && HEX_COR_REGEX.test(c) ? c : null);
   return {
     tamanhoFonte: TAMANHOS_FONTE_VALIDOS.includes(estilo.tamanhoFonte) ? estilo.tamanhoFonte : ESTILO_PADRAO.tamanhoFonte,
     corFundo: corValida(estilo.corFundo),
     corTexto: corValida(estilo.corTexto),
+    destaque: sanitizarDestaque(estilo.destaque),
   };
 }
 

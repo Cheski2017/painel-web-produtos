@@ -24,6 +24,25 @@
   const ESCALA_FONTE = { pequena: 0.85, media: 1, grande: 1.2, "extra-grande": 1.45 };
   const ESTILO_PADRAO = { tamanhoFonte: "media", corFundo: null, corTexto: null };
 
+  // Personalização do modo destaque. Cores/textos nulos = padrão do slide.
+  const CORES_DESTAQUE_PADRAO = { corFundo: "#e30613", corDestaque: "#ffe000", corLateral: "#f2f2f0", corTexto: "#ffffff" };
+  const TEXTO_FAIXA_PADRAO = "OFERTA";
+  const TEXTO_SELO_PADRAO = "Baixou o preço";
+  const DESTAQUE_PADRAO = {
+    corFundo: null,
+    corDestaque: null,
+    corLateral: null,
+    corTexto: null,
+    textoFaixa: null,
+    textoSelo: null,
+    produtos: "ofertas",
+    mostrarPrecoAnterior: true,
+    mostrarDesconto: true,
+    mostrarIlustrativa: true,
+    logo: null,
+  };
+  const LOGO_LARGURA_MAX = 480;
+
   const state = {
     departamentos: [],
     unidades: [],
@@ -43,7 +62,7 @@
     displayPainelId: null,
     displayUnidade: "",
     displayCampos: new Set(CAMPOS_DISPONIVEIS.map((c) => c.chave)),
-    displayEstilo: { ...ESTILO_PADRAO },
+    displayEstilo: { ...ESTILO_PADRAO, destaque: { ...DESTAQUE_PADRAO } },
     displayPrefs: { ...LAYOUT_PADRAO },
     autenticado: false,
   };
@@ -174,6 +193,9 @@
     // no modo destaque cada tela tem um único produto, então "linhas" não se aplica
     document.getElementById("linhasField").hidden = modo === "destaque";
     views.display.classList.toggle("modo-destaque", modo === "destaque");
+    // no painel 🎨: cores de "itens fora de oferta" só valem para cards/lista
+    document.getElementById("estiloDestaque").hidden = modo !== "destaque";
+    for (const el of document.querySelectorAll("[data-so-grade]")) el.hidden = modo === "destaque";
     document.getElementById("colunasSelect").value = String(state.displayPrefs.colunas);
     document.getElementById("linhasInput").value = String(state.displayPrefs.linhas);
     document.getElementById("intervaloTelaInput").value = String(state.displayPrefs.intervaloTela);
@@ -260,13 +282,116 @@
 
     if (state.displayEstilo.corTexto) grid.style.setProperty("--card-texto-custom", state.displayEstilo.corTexto);
     else grid.style.removeProperty("--card-texto-custom");
+
+    const destaque = state.displayEstilo.destaque;
+    for (const chave of Object.keys(CORES_DESTAQUE_PADRAO)) {
+      grid.style.setProperty(`--destaque-${chave}`, destaque[chave] || CORES_DESTAQUE_PADRAO[chave]);
+    }
   }
 
   function atualizarControlesEstilo() {
     document.getElementById("estiloTamanhoFonte").value = state.displayEstilo.tamanhoFonte;
     document.getElementById("estiloCorFundo").value = state.displayEstilo.corFundo || corPadraoTema("--surface-1");
     document.getElementById("estiloCorTexto").value = state.displayEstilo.corTexto || corPadraoTema("--text-primary");
+
+    const destaque = state.displayEstilo.destaque;
+    document.getElementById("destaqueCorFundo").value = destaque.corFundo || CORES_DESTAQUE_PADRAO.corFundo;
+    document.getElementById("destaqueCorDestaque").value = destaque.corDestaque || CORES_DESTAQUE_PADRAO.corDestaque;
+    document.getElementById("destaqueCorLateral").value = destaque.corLateral || CORES_DESTAQUE_PADRAO.corLateral;
+    document.getElementById("destaqueCorTexto").value = destaque.corTexto || CORES_DESTAQUE_PADRAO.corTexto;
+    document.getElementById("destaqueTextoFaixa").value = destaque.textoFaixa ?? TEXTO_FAIXA_PADRAO;
+    document.getElementById("destaqueTextoSelo").value = destaque.textoSelo ?? TEXTO_SELO_PADRAO;
+    document.getElementById("destaqueProdutos").value = destaque.produtos;
+    document.getElementById("destaqueMostrarPrecoAnterior").checked = destaque.mostrarPrecoAnterior;
+    document.getElementById("destaqueMostrarDesconto").checked = destaque.mostrarDesconto;
+    document.getElementById("destaqueMostrarIlustrativa").checked = destaque.mostrarIlustrativa;
+    const preview = document.getElementById("destaqueLogoPreview");
+    preview.hidden = !destaque.logo;
+    if (destaque.logo) preview.src = destaque.logo;
+    document.getElementById("destaqueLogoRemoverBtn").hidden = !destaque.logo;
   }
+
+  /** Aplica uma mudança da personalização do destaque: salva e redesenha o slide. */
+  function alterarDestaque(mudancas) {
+    Object.assign(state.displayEstilo.destaque, mudancas);
+    aplicarEstiloPersonalizado();
+    salvarEstiloAtual();
+    if (state.displayPrefs.modo === "destaque") atualizarPaginaAtual();
+  }
+
+  for (const [id, chave] of [
+    ["destaqueCorFundo", "corFundo"],
+    ["destaqueCorDestaque", "corDestaque"],
+    ["destaqueCorLateral", "corLateral"],
+    ["destaqueCorTexto", "corTexto"],
+  ]) {
+    // cor só muda variável CSS - não precisa redesenhar o slide (evita reiniciar a animação)
+    document.getElementById(id).addEventListener("input", (e) => {
+      state.displayEstilo.destaque[chave] = e.target.value;
+      aplicarEstiloPersonalizado();
+      salvarEstiloAtual();
+    });
+  }
+
+  for (const [id, chave] of [
+    ["destaqueTextoFaixa", "textoFaixa"],
+    ["destaqueTextoSelo", "textoSelo"],
+  ]) {
+    document.getElementById(id).addEventListener("input", (e) => alterarDestaque({ [chave]: e.target.value }));
+  }
+
+  document.getElementById("destaqueProdutos").addEventListener("change", (e) => {
+    state.displayPage = 0;
+    alterarDestaque({ produtos: e.target.value });
+  });
+
+  for (const [id, chave] of [
+    ["destaqueMostrarPrecoAnterior", "mostrarPrecoAnterior"],
+    ["destaqueMostrarDesconto", "mostrarDesconto"],
+    ["destaqueMostrarIlustrativa", "mostrarIlustrativa"],
+  ]) {
+    document.getElementById(id).addEventListener("change", (e) => alterarDestaque({ [chave]: e.target.checked }));
+  }
+
+  /** Reduz o logo no navegador (máx. LOGO_LARGURA_MAX px de largura) para não
+   *  guardar uma foto de vários MB no arquivo de painéis. */
+  function reduzirLogo(arquivo) {
+    return new Promise((resolve, reject) => {
+      const url = URL.createObjectURL(arquivo);
+      const img = new Image();
+      img.onload = () => {
+        const escala = Math.min(1, LOGO_LARGURA_MAX / img.naturalWidth);
+        const canvas = document.createElement("canvas");
+        canvas.width = Math.round(img.naturalWidth * escala);
+        canvas.height = Math.round(img.naturalHeight * escala);
+        canvas.getContext("2d").drawImage(img, 0, 0, canvas.width, canvas.height);
+        URL.revokeObjectURL(url);
+        resolve(canvas.toDataURL("image/png"));
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(url);
+        reject(new Error("Não foi possível ler a imagem."));
+      };
+      img.src = url;
+    });
+  }
+
+  document.getElementById("destaqueLogoInput").addEventListener("change", async (e) => {
+    const arquivo = e.target.files[0];
+    e.target.value = "";
+    if (!arquivo) return;
+    try {
+      alterarDestaque({ logo: await reduzirLogo(arquivo) });
+      atualizarControlesEstilo();
+    } catch (err) {
+      alert(err.message);
+    }
+  });
+
+  document.getElementById("destaqueLogoRemoverBtn").addEventListener("click", () => {
+    alterarDestaque({ logo: null });
+    atualizarControlesEstilo();
+  });
 
   let salvarEstiloTimer = null;
   function salvarEstiloAtual() {
@@ -309,10 +434,13 @@
   });
 
   document.getElementById("estiloRestaurarBtn").addEventListener("click", () => {
-    state.displayEstilo = { ...ESTILO_PADRAO };
+    // o logo não é "aparência padrão" - continua (tem botão próprio para remover)
+    const logo = state.displayEstilo.destaque.logo;
+    state.displayEstilo = { ...ESTILO_PADRAO, destaque: { ...DESTAQUE_PADRAO, logo } };
     aplicarEstiloPersonalizado();
     atualizarControlesEstilo();
     salvarEstiloAtual();
+    atualizarPaginaAtual();
   });
 
   // ==================== ROTEAMENTO ====================
@@ -940,9 +1068,11 @@
 
   // ---- modo destaque: um produto por tela, no estilo de TV de açougue ----
 
-  /** No destaque só entram as ofertas; se o painel não tiver nenhuma, mostra
-   *  todos os produtos para a TV não ficar vazia. */
+  /** Por padrão o destaque mostra só as ofertas (se o painel não tiver
+   *  nenhuma, mostra todos para a TV não ficar vazia); dá pra escolher
+   *  "Todos do painel" na personalização. */
   function itensDestaque() {
+    if (state.displayEstilo.destaque.produtos === "todos") return state.displayItens;
     const ofertas = state.displayItens.filter((i) => i.emOferta);
     return ofertas.length ? ofertas : state.displayItens;
   }
@@ -982,23 +1112,27 @@
 
   function montarSlideDestaque(item) {
     const mostrar = state.displayCampos;
+    const destaque = state.displayEstilo.destaque;
     const [inteiro, centavos] = (Number(item.precoAtual) || 0).toFixed(2).split(".");
-    const hasPrecoAnterior = item.emOferta && item.precoAnterior > item.precoAtual;
-    const selo = item.emOferta ? "Baixou<br>o preço" : "Confira";
+    const hasPrecoAnterior = destaque.mostrarPrecoAnterior && item.emOferta && item.precoAnterior > item.precoAtual;
+    const hasDesconto = destaque.mostrarDesconto && item.emOferta && item.desconto > 0;
+    const textoFaixa = destaque.textoFaixa ?? TEXTO_FAIXA_PADRAO;
+    const selo = item.emOferta ? destaque.textoSelo ?? TEXTO_SELO_PADRAO : "Confira";
 
     const slide = document.createElement("article");
     slide.className = "destaque" + (mostrar.has("imagem") ? "" : " sem-imagem");
     slide.innerHTML = `
-      ${item.emOferta ? `<div class="destaque__faixa">OFERTA</div>` : ""}
+      ${item.emOferta && textoFaixa ? `<div class="destaque__faixa">${escapeHtml(textoFaixa)}</div>` : ""}
+      ${destaque.logo ? `<img class="destaque__logo" src="${destaque.logo}" alt="" />` : ""}
       <div class="destaque__midia">
         ${
           mostrar.has("imagem")
             ? `<img class="destaque__imagem" src="${urlImagemProduto(item)}" alt="" onerror="this.closest('.destaque').classList.add('sem-imagem')" />`
             : ""
         }
-        <div class="destaque__selo">${selo}</div>
+        <div class="destaque__selo">${escapeHtml(selo)}</div>
       </div>
-      <span class="destaque__ilustrativa">Imagem ilustrativa</span>
+      ${destaque.mostrarIlustrativa ? `<span class="destaque__ilustrativa">Imagem ilustrativa</span>` : ""}
       <div class="destaque__info">
         ${mostrar.has("marca") && item.marca ? `<span class="destaque__marca">${escapeHtml(item.marca)}</span>` : ""}
         <h3 class="destaque__nome">${escapeHtml(item.nomeProduto || "Produto sem nome")}</h3>
@@ -1008,7 +1142,7 @@
           <span class="destaque__inteiro">${Number(inteiro).toLocaleString("pt-BR")}</span>
           <span class="destaque__centavos">,${centavos}</span>
         </div>
-        ${item.emOferta && item.desconto > 0 ? `<span class="destaque__desconto">-${item.desconto}%</span>` : ""}
+        ${hasDesconto ? `<span class="destaque__desconto">-${item.desconto}%</span>` : ""}
       </div>
     `;
     return slide;
@@ -1030,6 +1164,7 @@
         tamanhoFonte: ESCALA_FONTE[data.painel?.estilo?.tamanhoFonte] ? data.painel.estilo.tamanhoFonte : "media",
         corFundo: data.painel?.estilo?.corFundo || null,
         corTexto: data.painel?.estilo?.corTexto || null,
+        destaque: { ...DESTAQUE_PADRAO, ...(data.painel?.estilo?.destaque || {}) },
       };
       aplicarEstiloPersonalizado();
       atualizarControlesEstilo();

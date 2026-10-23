@@ -188,16 +188,54 @@
             <option value="extra-grande">Extra grande</option>
           </select>
         </label>
-        <label class="field">
+        <label class="field" data-so-grade>
           <span>Cor de fundo dos itens</span>
           <input id="estiloCorFundo" type="color" />
         </label>
-        <label class="field">
+        <label class="field" data-so-grade>
           <span>Cor do texto dos itens</span>
           <input id="estiloCorTexto" type="color" />
         </label>
-        <span class="estilo-painel__obs">(as ofertas continuam destacadas em amarelo)</span>
+        <span class="estilo-painel__obs" data-so-grade>(as ofertas continuam destacadas em amarelo)</span>
         <button type="button" id="estiloRestaurarBtn" class="btn btn--ghost">Restaurar padrão</button>
+
+        <!-- personalização do modo destaque (só aparece nesse modo) -->
+        <div id="estiloDestaque" class="estilo-destaque" hidden>
+          <div class="estilo-destaque__grupo">
+            <span class="estilo-destaque__titulo">Cores</span>
+            <label class="field"><span>Fundo</span><input id="destaqueCorFundo" type="color" /></label>
+            <label class="field"><span>Faixa e preço</span><input id="destaqueCorDestaque" type="color" /></label>
+            <label class="field"><span>Lateral da foto</span><input id="destaqueCorLateral" type="color" /></label>
+            <label class="field"><span>Texto</span><input id="destaqueCorTexto" type="color" /></label>
+          </div>
+          <div class="estilo-destaque__grupo">
+            <span class="estilo-destaque__titulo">Textos</span>
+            <label class="field"><span>Faixa do canto</span><input id="destaqueTextoFaixa" type="text" maxlength="30" placeholder="OFERTA" /></label>
+            <label class="field"><span>Selo (produto sem foto)</span><input id="destaqueTextoSelo" type="text" maxlength="40" placeholder="Baixou o preço" /></label>
+          </div>
+          <div class="estilo-destaque__grupo">
+            <span class="estilo-destaque__titulo">Exibir</span>
+            <label class="field">
+              <span>Produtos</span>
+              <select id="destaqueProdutos">
+                <option value="ofertas">Só ofertas</option>
+                <option value="todos">Todos do painel</option>
+              </select>
+            </label>
+            <label class="estilo-destaque__check"><input id="destaqueMostrarPrecoAnterior" type="checkbox" /> "De R$ … por"</label>
+            <label class="estilo-destaque__check"><input id="destaqueMostrarDesconto" type="checkbox" /> % de desconto</label>
+            <label class="estilo-destaque__check"><input id="destaqueMostrarIlustrativa" type="checkbox" /> "Imagem ilustrativa"</label>
+          </div>
+          <div class="estilo-destaque__grupo">
+            <span class="estilo-destaque__titulo">Logo da loja</span>
+            <img id="destaqueLogoPreview" class="estilo-destaque__logo" alt="Logo" hidden />
+            <label class="btn btn--ghost estilo-destaque__upload">
+              Escolher imagem…
+              <input id="destaqueLogoInput" type="file" accept="image/png,image/jpeg,image/webp" hidden />
+            </label>
+            <button type="button" id="destaqueLogoRemoverBtn" class="btn btn--ghost" hidden>Remover logo</button>
+          </div>
+        </div>
       </div>
 
       <p id="displayStatus" class="status-line" aria-live="polite"></p>
